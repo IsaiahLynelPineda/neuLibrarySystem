@@ -77,4 +77,10 @@ app.post('/toggle-block', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.get('/google*.html', (req, res) => {
+    // This assumes the file is in your main folder on GitHub
+    res.sendFile(path.join(__dirname, req.url));
+});
+
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
