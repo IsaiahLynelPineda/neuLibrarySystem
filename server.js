@@ -7,6 +7,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 app.use(express.json());
 app.use(express.static('public'));
+app.use(express.static('.'));
 
 // --- MAIN CHECK-IN & AUTO-REGISTRATION ---
 app.post('/check-in', async (req, res) => {
