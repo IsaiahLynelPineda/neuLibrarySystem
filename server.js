@@ -10,7 +10,7 @@ const MASTER_ADMINS = [
     'jcesperanza@neu.edu.ph', 
     'isaiahlynel.pineda@neu.edu.ph',
     //'janrey.maranan@neu.edu.ph',
-    //'czesckahalie.bongco@neu.edu.ph'
+    'czesckahalie.bongco@neu.edu.ph'
 ];
 
 // --- 2. THE AUTO-SYNC FUNCTION (RUNS ON STARTUP) ---
