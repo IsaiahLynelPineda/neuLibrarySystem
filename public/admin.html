@@ -20,14 +20,28 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-light); color: #333; }
         
-        /* Sidebar */
+        /* Sidebar - stays fixed to the screen */
         #sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: var(--sidebar-bg); color: white; transition: 0.3s; z-index: 1000; padding-top: 80px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
         #sidebar button { width: 100%; padding: 18px; background: none; border: none; color: white; text-align: left; cursor: pointer; font-size: 16px; font-weight: bold; border-left: 5px solid transparent; }
         #sidebar button:hover { background: #3e2a86; color: var(--accent-gold); border-left: 5px solid var(--accent-gold); }
 
-        /* Header */
+        /* Header - moves when you scroll */
         header { background-color: var(--primary-dark); color: white; padding: 20px; text-align: center; position: relative; }
         header h1 { margin: 0; font-size: 24px; letter-spacing: 2px; color: var(--accent-gold); }
+
+        /* The Menu Button - now anchored to the Header */
+        #menu-btn { 
+            position: absolute; 
+            top: 50%; 
+            left: 20px; 
+            transform: translateY(-50%); 
+            z-index: 1100; 
+            background: none; 
+            border: none; 
+            color: white; 
+            font-size: 30px; 
+            cursor: pointer; 
+        }
 
         .container { padding: 30px; max-width: 1200px; margin: auto; }
 
@@ -44,30 +58,14 @@
         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
         tr:hover { background-color: #f9f9f9; }
 
-        /* Status & Buttons */
         .status-pill { padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; }
         .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-block { background: #dc3545; color: white; }
         .btn-unblock { background: #28a745; color: white; }
         .btn-export { background: #28a745; color: white; float: right; margin-bottom: 15px; }
-        
-        #menu-btn { 
-    position: absolute; /* Changed from fixed */
-    top: 50%;           /* Move to middle of header */
-    left: 20px; 
-    transform: translateY(-50%); /* Perfectly centers it vertically */
-    z-index: 1100; 
-    background: none; 
-    border: none; 
-    color: white; 
-    font-size: 30px; 
-    cursor: pointer; 
-}
     </style>
 </head>
 <body>
-
-<button id="menu-btn" onclick="toggleSidebar()">☰</button>
 
 <div id="sidebar">
     <button onclick="showPage('logs')">📋 VISIT LOGS</button>
@@ -164,65 +162,54 @@
     }
 
     function renderTables() {
-    const logsBody = document.getElementById('logsTableBody');
-    const blockedBody = document.getElementById('blockedTableBody');
-    logsBody.innerHTML = '';
-    blockedBody.innerHTML = '';
+        const logsBody = document.getElementById('logsTableBody');
+        const blockedBody = document.getElementById('blockedTableBody');
+        logsBody.innerHTML = '';
+        blockedBody.innerHTML = '';
 
-    const blockedEmails = new Set();
+        const blockedEmails = new Set();
 
-    fullData.forEach(item => {
-        const v = item.visitors || {};
-        const isBlocked = v.is_blocked || false;
-        const isAdmin = v.is_admin || false;
+        fullData.forEach(item => {
+            const v = item.visitors || {};
+            const isBlocked = v.is_blocked || false;
+            const isAdmin = v.is_admin || false;
 
-        if (isBlocked) {
-            if (!blockedEmails.has(v.email)) {
-                blockedEmails.add(v.email);
-                blockedBody.insertAdjacentHTML('beforeend', `
+            if (isBlocked) {
+                if (!blockedEmails.has(v.email)) {
+                    blockedEmails.add(v.email);
+                    blockedBody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td>${v.full_name || 'Unknown'}</td>
+                            <td>${v.program_college || 'N/A'}</td>
+                            <td>${v.email}</td>
+                            <td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock User</button></td>
+                        </tr>
+                    `);
+                }
+            } else {
+                const actionBtn = isAdmin ? `<b style="color:#000033">ADMIN</b>` : 
+                    `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
+
+                logsBody.insertAdjacentHTML('beforeend', `
                     <tr>
-                        <td>${v.full_name || 'Unknown'}</td>
+                        <td>${v.full_name || 'N/A'}</td>
                         <td>${v.program_college || 'N/A'}</td>
-                        <td>${v.email}</td>
-                        <td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock User</button></td>
+                        <td>${v.user_type || 'N/A'}</td>
+                        <td><span class="status-pill" style="color:green">✅ ACTIVE</span></td>
+                        <td>${item.reason || 'N/A'}</td>
+                        <td>${actionBtn}</td>
                     </tr>
                 `);
             }
-        } else {
-            const actionBtn = isAdmin ? `<b style="color:#000033">ADMIN</b>` : 
-                `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
+        });
 
-            logsBody.insertAdjacentHTML('beforeend', `
-                <tr>
-                    <td>${v.full_name || 'N/A'}</td>
-                    <td>${v.program_college || 'N/A'}</td>
-                    <td>${v.user_type || 'N/A'}</td>
-                    <td><span class="status-pill" style="color:green">✅ ACTIVE</span></td>
-                    <td>${item.reason || 'N/A'}</td>
-                    <td>${actionBtn}</td>
-                </tr>
-            `);
+        if (blockedEmails.size === 0) {
+            blockedBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #666;">🚫 No users blocked.</td></tr>`;
         }
-    });
-
-    // Handle Empty Blocked List State
-    if (blockedEmails.size === 0) {
-        blockedBody.innerHTML = `
-            <tr>
-                <td colspan="4" style="text-align: center; padding: 40px; color: #666; font-weight: 500;">
-                    🚫 No users are currently blocked.
-                </td>
-            </tr>`;
     }
-
-    // Handle Empty Logs State (Optional, but good practice)
-    if (logsBody.children.length === 0) {
-        logsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No visit logs found.</td></tr>`;
-    }
-}
 
     async function toggleBlock(email, newStatus) {
-        if (!confirm(`Are you sure you want to ${newStatus ? 'Block' : 'Unblock'} this user?`)) return;
+        if (!confirm(`Are you sure?`)) return;
         const res = await fetch('/toggle-block', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
