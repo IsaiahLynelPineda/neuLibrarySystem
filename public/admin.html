@@ -152,50 +152,52 @@
     }
 
     function renderTables() {
-        const logsBody = document.getElementById('logsTableBody');
-        const blockedBody = document.getElementById('blockedTableBody');
-        logsBody.innerHTML = '';
-        blockedBody.innerHTML = '';
+    const logsBody = document.getElementById('logsTableBody');
+    const blockedBody = document.getElementById('blockedTableBody');
+    logsBody.innerHTML = '';
+    blockedBody.innerHTML = '';
 
-        // Tracker to ensure blocked users only appear ONCE in the blocked list
-        const blockedEmails = new Set();
+    // Tracker to ensure blocked users only appear ONCE in the blocked list
+    const blockedEmails = new Set();
 
-        fullData.forEach(item => {
-            const v = item.visitors || {};
-            const isBlocked = v.is_blocked || false;
-            const isAdmin = v.is_admin || false;
+    fullData.forEach(item => {
+        const v = item.visitors || {};
+        const isBlocked = v.is_blocked || false;
+        const isAdmin = v.is_admin || false;
 
-            // Row for Main Logs
+        // --- NEW LOGIC START ---
+        if (isBlocked) {
+            // 1. If blocked, only send to the Blocked Page (and only once)
+            if (!blockedEmails.has(v.email)) {
+                blockedEmails.add(v.email);
+                blockedBody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td>${v.full_name || 'Unknown'}</td>
+                        <td>${v.program_college || 'N/A'}</td>
+                        <td>${v.email}</td>
+                        <td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock User</button></td>
+                    </tr>
+                `);
+            }
+        } else {
+            // 2. If NOT blocked (Active), show them in the Visit Logs
             const actionBtn = isAdmin ? `<b style="color:#000033">ADMIN</b>` : 
-                `<button class="btn ${isBlocked ? 'btn-unblock' : 'btn-block'}" onclick="toggleBlock('${v.email}', ${!isBlocked})">
-                    ${isBlocked ? 'Unblock' : 'Block'}
-                </button>`;
+                `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
 
             logsBody.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td>${v.full_name || 'N/A'}</td>
                     <td>${v.program_college || 'N/A'}</td>
                     <td>${v.user_type || 'N/A'}</td>
-                    <td><span class="status-pill" style="color:${isBlocked ? 'red':'green'}">${isBlocked ? '🚫 BLOCKED':'✅ ACTIVE'}</span></td>
+                    <td><span class="status-pill" style="color:green">✅ ACTIVE</span></td>
                     <td>${item.reason || 'N/A'}</td>
                     <td>${actionBtn}</td>
                 </tr>
             `);
-
-            // Row for Unique Blocked List
-            if (isBlocked && !blockedEmails.has(v.email)) {
-                blockedEmails.add(v.email);
-                blockedBody.insertAdjacentHTML('beforeend', `
-                    <tr>
-                        <td>${v.full_name}</td>
-                        <td>${v.program_college}</td>
-                        <td>${v.email}</td>
-                        <td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock User</button></td>
-                    </tr>
-                `);
-            }
-        });
-    }
+        }
+        // --- NEW LOGIC END ---
+    });
+}
 
     async function toggleBlock(email, newStatus) {
         if (!confirm(`Are you sure you want to ${newStatus ? 'Block' : 'Unblock'} this user?`)) return;
