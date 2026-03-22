@@ -124,9 +124,13 @@
         background: var(--hex-panel); padding: 20px; margin-bottom: 20px;
         border: 1px solid var(--hex-border);
     }
+    /* Filter Bar Styling - Updated for visibility */
     .filter-bar input[type="date"] {
-        background: var(--hex-dark); border: 1px solid var(--hex-border);
-        color: var(--hex-text); padding: 8px;
+        background: var(--hex-dark); 
+        border: 1px solid var(--hex-border);
+        color: white; /* Makes the typed text white */
+        padding: 8px;
+        color-scheme: dark; /* MAGIC LINE: Tells the browser to render the icon/picker in white */
     }
 
     /* Chart Container */
