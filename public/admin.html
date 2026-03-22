@@ -155,14 +155,29 @@ function switchTab(tab) {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = ''; 
 
-    // FILTER: Only show users that match the current tab
-    const filteredData = data.filter(log => {
-        const isBlocked = log.visitors?.is_blocked || false;
-        return currentTab === 'blocked' ? isBlocked === true : isBlocked === false;
-    });
+    let displayData = [];
 
-    filteredData.forEach(log => {
-        const v = log.visitors; 
+    if (currentTab === 'blocked') {
+        // --- BLOCKED TAB: Group by email so each person appears ONCE ---
+        const uniqueUsers = new Map();
+        data.forEach(log => {
+            const v = log.visitors;
+            if (v && v.is_blocked && !uniqueUsers.has(v.email)) {
+                uniqueUsers.set(v.email, { ...v, reason: log.reason, created_at: log.created_at });
+            }
+        });
+        displayData = Array.from(uniqueUsers.values());
+    } else {
+        // --- ACTIVE TAB: Show EVERY log entry (The full history) ---
+        displayData = data.filter(log => !log.visitors?.is_blocked);
+    }
+
+    // Render the decided data
+    displayData.forEach(item => {
+        // In the active tab, 'item' is the log. In the blocked tab, it's the unique user.
+        // We use 'v' to handle both cases smoothly.
+        const v = item.visitors || item; 
+        const logDate = item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A';
         
         const row = `
             <tr>
@@ -174,7 +189,7 @@ function switchTab(tab) {
                         ${v?.is_blocked ? '🚫 BLOCKED' : '✅ ACTIVE'}
                     </span>
                 </td>
-                <td>${log.reason || 'N/A'}</td>
+                <td>${item.reason || 'N/A'}</td>
                 <td>
                     ${v?.is_admin ? '<b style="color:#004a99">ADMIN</b>' : 
                     `<button onclick="toggleBlock('${v?.email}', ${!v?.is_blocked})" class="btn" style="background: ${v?.is_blocked ? '#28a745' : '#dc3545'}; color: white;">
