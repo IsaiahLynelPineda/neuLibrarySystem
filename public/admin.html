@@ -67,8 +67,23 @@
         text-shadow: 0 0 15px var(--hex-glow);
     }
 
-    #menu-btn { position: absolute; left: 20px; background: none; border: none; color: var(--neu-gold); font-size: 24px; cursor: pointer; }
-    #live-clock { position: absolute; right: 20px; color: var(--neu-gold); font-weight: bold; font-family: 'Courier New', monospace; font-size: 16px; }
+    /* Update the menu button to animate its movement */
+#menu-btn { 
+    position: absolute; 
+    left: 20px; 
+    background: none; 
+    border: none; 
+    color: var(--neu-gold); 
+    font-size: 24px; 
+    cursor: pointer; 
+    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Matches sidebar speed */
+    z-index: 1100; /* Ensures it stays ABOVE the sidebar */
+}
+
+/* Add a subtle glow to the active page button in the sidebar */
+#sidebar button:active {
+    background: rgba(200, 170, 110, 0.3);
+}
 
     .container { padding: 30px; max-width: 1200px; margin: auto; }
 
@@ -151,76 +166,10 @@
     <div id="live-clock">--:--:-- --</div>
 </header>
 
-<div class="container">
-    <div id="page-logs">
-        <div style="overflow: hidden; margin-bottom: 10px;">
-            <input type="text" id="searchInput" placeholder="SEARCH OPERATIVES..." onkeyup="filterTable()" style="width: 300px;">
-            <button class="btn btn-export" onclick="downloadPDF()">Export PDF</button>
-        </div>
-        
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>College</th>
-                        <th>Type/Course</th>
-                        <th>Time In</th> 
-                        <th>Reason</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="logsTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="page-stats" style="display:none;">
-        <div class="filter-bar">
-            <button class="btn" style="background: transparent; color: var(--neu-gold);" onclick="filterQuick('daily')">Daily</button>
-            <button class="btn" style="background: transparent; color: var(--neu-gold);" onclick="filterQuick('weekly')">Weekly</button>
-            <button class="btn" style="background: transparent; color: var(--neu-gold);" onclick="filterQuick('monthly')">Monthly</button>
-            <div style="border-left: 1px solid var(--hex-border); height: 30px; margin: 0 10px;"></div>
-            <input type="date" id="startDate">
-            <span style="color: var(--neu-gold); font-size: 12px;">TO</span>
-            <input type="date" id="endDate">
-            <button class="btn" style="background: var(--neu-gold); color: var(--hex-dark);" onclick="applyCustomFilter()">Apply Filter</button>
-            <button class="btn" style="background: transparent; color: #666; border-color: #666;" onclick="resetStats()">Reset</button>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Filtered Results</h3><div class="count" id="filtered-count">0</div></div>
-            <div class="stat-card"><h3>Today (Total)</h3><div class="count" id="today-count">0</div></div>
-            <div class="stat-card"><h3>Total Logs</h3><div class="count" id="total-count">0</div></div>
-        </div>
-        
-        <div class="chart-box">
-            <canvas id="visitChart" style="max-height: 400px;"></canvas>
-        </div>
-    </div>
-
-    <div id="page-blocked" style="display:none;">
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>College</th>
-                        <th>Email</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="blockedTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <script>
     let fullData = [];
     let myChart = null;
 
-    // 1. CLOCK FUNCTION (SAFE)
     function startClock() {
         setInterval(() => {
             const now = new Date();
@@ -228,18 +177,33 @@
         }, 1000);
     }
 
+    // UPDATED: Simple toggle logic
     function toggleSidebar() {
         const sb = document.getElementById('sidebar');
-        sb.style.left = (sb.style.left === '0px') ? '-250px' : '0px';
+        const menuBtn = document.getElementById('menu-btn');
+        if (sb.style.left === '0px') {
+            sb.style.left = '-250px';
+            menuBtn.style.left = '20px'; // Back to original position
+        } else {
+            sb.style.left = '0px';
+            menuBtn.style.left = '260px'; // Move with the sidebar so it's always clickable
+        }
     }
 
+    // UPDATED: Navigation logic
     function showPage(pageId) {
         ['logs', 'stats', 'blocked'].forEach(p => document.getElementById('page-' + p).style.display = 'none');
         document.getElementById('page-' + pageId).style.display = 'block';
         document.getElementById('page-header').innerText = pageId.toUpperCase().replace('-', ' ');
-        toggleSidebar();
+        
+        // Close sidebar ONLY after a selection is made
+        const sb = document.getElementById('sidebar');
+        if (sb.style.left === '0px') toggleSidebar();
+
         if(pageId === 'stats') updateStats(fullData);
     }
+
+    // ... (loadData, updateStats, filterQuick, applyCustomFilter, resetStats stay the same) ...
 
     async function loadData() {
         try {
@@ -293,6 +257,7 @@
         updateStats(fullData);
     }
 
+    // UPDATED: High-Contrast Gold Chart
     function initChart(dataToUse) {
         const ctx = document.getElementById('visitChart').getContext('2d');
         const counts = [0, 0, 0, 0, 0, 0, 0];
@@ -302,11 +267,29 @@
             type: 'bar',
             data: {
                 labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                datasets: [{ label: 'Visitors', data: counts, backgroundColor: '#000033' }]
+                datasets: [{ 
+                    label: 'Visitors', 
+                    data: counts, 
+                    backgroundColor: '#c8aa6e', // Hextech Gold
+                    borderColor: '#785a28',
+                    borderWidth: 1
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: {
+                    y: { ticks: { color: '#f0e6d2' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#f0e6d2' }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#c8aa6e', font: { weight: 'bold' } } }
+                }
+            }
         });
     }
+
+    // ... (renderTables, toggleBlock, filterTable, downloadPDF, adminLogout stay the same) ...
 
     function renderTables() {
         const logsBody = document.getElementById('logsTableBody');
@@ -318,7 +301,6 @@
 
         fullData.forEach(item => {
             const v = item.visitors || {};
-            // Formatting the Time In safely
             const timeIn = new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
             if (v.is_blocked) {
@@ -335,7 +317,7 @@
                     `);
                 }
             } else {
-                const action = v.is_admin ? '<b>ADMIN</b>' : `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
+                const action = v.is_admin ? '<span style="color:var(--neu-gold)">ADMIN</span>' : `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
                 logsBody.insertAdjacentHTML('beforeend', `
                     <tr>
                         <td>${v.full_name || 'N/A'}</td>
@@ -370,43 +352,26 @@
         });
     }
 
-function downloadPDF() {
+    function downloadPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
-        // Add Header
         doc.setFontSize(18);
-        doc.setTextColor(0, 0, 51); // Your primary-dark color
+        doc.setTextColor(0, 0, 51);
         doc.text("NEU Library Visit Logs Report", 14, 20);
-        
-        // Add timestamp of the report
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
-
-        // Define columns
         const columns = ["Full Name", "College", "Type", "Time In", "Reason"];
-        
-        // Get rows from the table (only those not hidden by search)
         const rows = [];
         const tableRows = document.querySelectorAll("#logsTableBody tr");
-        
         tableRows.forEach(row => {
             if (row.style.display !== "none") {
                 const cells = row.querySelectorAll("td");
                 if (cells.length >= 5) {
-                    rows.push([
-                        cells[0].innerText, // Full Name
-                        cells[1].innerText, // College
-                        cells[2].innerText, // Type
-                        cells[3].innerText, // Time In
-                        cells[4].innerText  // Reason
-                    ]);
+                    rows.push([cells[0].innerText, cells[1].innerText, cells[2].innerText, cells[3].innerText, cells[4].innerText]);
                 }
             }
         });
-
-        // Generate Table
         doc.autoTable({
             head: [columns],
             body: rows,
@@ -415,14 +380,11 @@ function downloadPDF() {
             headStyles: { fillColor: [0, 0, 51] },
             styles: { fontSize: 9 }
         });
-
-        // Save file
         doc.save(`NEU_Library_Logs_${new Date().toISOString().slice(0,10)}.pdf`);
     }
 
     async function adminLogout() { if(confirm("Logout?")) window.location.href = "/"; }
 
-    // Init everything
     loadData();
     startClock();
 </script>
