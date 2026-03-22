@@ -283,6 +283,56 @@
         });
     }
 
+function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add Header
+        doc.setFontSize(18);
+        doc.setTextColor(0, 0, 51); // Your primary-dark color
+        doc.text("NEU Library Visit Logs Report", 14, 20);
+        
+        // Add timestamp of the report
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+
+        // Define columns
+        const columns = ["Full Name", "College", "Type", "Time In", "Reason"];
+        
+        // Get rows from the table (only those not hidden by search)
+        const rows = [];
+        const tableRows = document.querySelectorAll("#logsTableBody tr");
+        
+        tableRows.forEach(row => {
+            if (row.style.display !== "none") {
+                const cells = row.querySelectorAll("td");
+                if (cells.length >= 5) {
+                    rows.push([
+                        cells[0].innerText, // Full Name
+                        cells[1].innerText, // College
+                        cells[2].innerText, // Type
+                        cells[3].innerText, // Time In
+                        cells[4].innerText  // Reason
+                    ]);
+                }
+            }
+        });
+
+        // Generate Table
+        doc.autoTable({
+            head: [columns],
+            body: rows,
+            startY: 35,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 0, 51] },
+            styles: { fontSize: 9 }
+        });
+
+        // Save file
+        doc.save(`NEU_Library_Logs_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
     async function adminLogout() { if(confirm("Logout?")) window.location.href = "/"; }
 
     // Init everything
