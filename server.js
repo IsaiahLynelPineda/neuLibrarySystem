@@ -8,7 +8,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // --- 1. THE MASTER ADMIN LIST (EDIT THIS ONLY) ---
 const MASTER_ADMINS = [
     'jcesperanza@neu.edu.ph', 
-    'isaiahlynel.pineda@neu.edu.ph',
+    //'isaiahlynel.pineda@neu.edu.ph',
     'janrey.maranan@neu.edu.ph',
     'czesckahalie.bongco@neu.edu.ph'
 ];
