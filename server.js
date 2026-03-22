@@ -12,33 +12,48 @@ app.use(express.static('.'));
 // --- MAIN CHECK-IN & AUTO-REGISTRATION ---
 app.post('/check-in', async (req, res) => {
     const { fullName, identifier, college, userType, reason } = req.body;
+    
+    // 1. HARDCODED ADMIN LIST
+    const adminEmails = [
+        'jcesperanza@neu.edu.ph', 
+        'isaiahlynel.pineda@neu.edu.ph'
+    ]; 
+    
+    // Check if the current user should be an admin
+    const shouldBeAdmin = adminEmails.includes(identifier);
+
     try {
+        // 2. UPSERT: This creates the user if they don't exist, OR updates them if they do
         const { data: user, error: userError } = await supabase
             .from('visitors')
             .upsert({ 
                 email: identifier, 
                 full_name: fullName, 
                 program_college: college, 
-                user_type: userType 
+                user_type: userType,
+                is_admin: shouldBeAdmin // Automatically sets true for the emails above
             }, { onConflict: 'email' })
             .select()
             .single();
 
         if (userError) return res.status(500).json({ message: "Database Error: " + userError.message });
 
+        // 3. BLOCK CHECK: If you blocked them via the admin panel
         if (user.is_blocked) {
-            return res.status(403).json({ message: "Access Denied: You are not allowed to use the library." });
+            return res.status(403).json({ message: "Access Denied: You are currently restricted from entry." });
         }
 
+        // 4. LOG THE VISIT: Record why they are here
         await supabase.from('visit_logs').insert([{ visitor_id: user.id, reason: reason }]);
 
+        // 5. SUCCESS RESPONSE
         res.json({ 
             message: "Welcome to NEU Library!",
             name: user.full_name,
-            program: user.program_college,
-            isAdmin: user.is_admin
+            isAdmin: user.is_admin // The frontend will use this to show the Admin Button
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Server Connection Error" });
     }
 });
