@@ -1,84 +1,251 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="notranslate" translate="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEU Library System</title>
+    <meta name="google" content="notranslate">
+    <title>NEU Library - Digital Visitation Log</title>
     <style>
         :root { --neu-blue: #004a99; --neu-gold: #ffcc00; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 90%; max-width: 500px; border-top: 8px solid var(--neu-blue); text-align: center; display: none; }
-        #startingPage { position: fixed; inset: 0; background: linear-gradient(rgba(0,20,50,0.8), rgba(0,20,50,0.8)), url('https://www.neu.edu.ph/main/assets/images/slider/bg1.jpg') center/cover; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 1000; }
-        .submit-btn { width: 100%; padding: 15px; margin-top: 15px; background: var(--neu-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .google-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 15px; background: white; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .user-pill { background: #eef2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; border-left: 5px solid var(--neu-blue); }
-        label { font-size: 11px; font-weight: bold; color: var(--neu-blue); text-transform: uppercase; display: block; }
-        select { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid #ccc; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        #startingPage, .card { display: none; }
+
+        #startingPage {
+            position: fixed; inset: 0;
+            background: linear-gradient(rgba(0,20,50,0.9), rgba(0,20,50,0.9)), url('https://www.neu.edu.ph/main/assets/images/slider/bg1.jpg') center/cover;
+            flex-direction: column; justify-content: center; align-items: center;
+            color: white; z-index: 1000; text-align: center;
+        }
+
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 90%; max-width: 500px; border-top: 8px solid var(--neu-blue); text-align: center; }
+        .google-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 15px; background: white; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .user-pill { background: #eef2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--neu-blue); text-align: left; }
+        .user-pill input { border: none; background: transparent; width: 100%; font-size: 14px; color: #333; pointer-events: none; outline: none; font-weight: bold; }
+        label { font-size: 10px; font-weight: bold; color: var(--neu-blue); text-transform: uppercase; display: block; margin-bottom: 2px; }
+        select, .submit-btn { width: 100%; padding: 12px; margin-top: 15px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+        .submit-btn { background: var(--neu-blue); color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 25px; }
+        .success-box { padding: 20px; background: #d4edda; color: #155724; border-radius: 8px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div id="startingPage">
         <img src="https://www.neu.edu.ph/main/assets/images/logo.png" width="130">
-        <h1>NEU LIBRARY</h1>
-        <button onclick="showPage('selectionCard')" style="padding: 18px 60px; background: var(--neu-gold); color: #002d5a; border: none; font-weight: 900; border-radius: 50px; cursor: pointer;">ENTER SYSTEM</button>
+        <h1 style="font-size: 2.5rem; margin: 20px 0 10px;">NEU LIBRARY</h1>
+        <button onclick="showPage('selectionCard')" style="padding: 18px 60px; background: var(--neu-gold); color: #002d5a; border: none; font-weight: 900; border-radius: 50px; cursor: pointer; font-size: 18px; margin-top: 30px;">ENTER SYSTEM</button>
     </div>
 
     <div class="card" id="selectionCard">
-        <h2>Access Mode</h2>
-        <p>Please select your mode of login:</p>
+        <h2 style="color: var(--neu-blue);">Access Mode</h2>
+        <p style="color: #666; margin-bottom: 30px;">Please select your mode of login:</p>
         <button class="submit-btn" onclick="setMode('visitor')">Visitor Log-in</button>
-        <button class="submit-btn" style="background:#555;" onclick="setMode('admin')">Admin Log-in</button>
+        <button class="submit-btn" style="background:#666;" onclick="setMode('admin')">Admin Log-in</button>
     </div>
 
     <div class="card" id="loginCard">
         <h2 id="loginHeader">Authentication</h2>
+        <p id="loginSubtext">Sign in with your NEU Google account.</p>
         <button class="google-btn" onclick="triggerGoogleAuth()">
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" width="20">
             Continue with Google
         </button>
+        <button onclick="showPage('selectionCard')" style="margin-top:15px; background:none; border:none; color:blue; cursor:pointer;">← Back</button>
     </div>
 
     <div class="card" id="formCard">
         <div id="formContent">
             <div class="user-pill">
-                <label>Email</label><input type="text" id="dispEmail" readonly style="border:none; background:transparent; font-weight:bold;">
+                <label>Name</label><input type="text" id="dispName" readonly>
+                <label style="margin-top:10px;">Email</label><input type="text" id="dispEmail" readonly>
             </div>
-            <select id="college" onchange="updatePrograms()"><option value="" disabled selected>Select College</option></select>
-            <select id="program"><option value="" disabled selected>Select Program</option></select>
-            <select id="reason">
-                <option value="" disabled selected>Pick a reason</option>
-                <option value="reading">Reading</option>
-                <option value="research">Research</option>
-                <option value="computer">Use of Computer</option>
-            </select>
+            <div style="text-align: left;">
+                <label>College</label>
+                <select id="college" onchange="updatePrograms()">
+                    <option value="" disabled selected>Select College</option>
+                </select>
+                <label style="margin-top:15px;">Program</label>
+                <select id="program"><option value="" disabled selected>Select Program</option></select>
+                <label style="margin-top:15px;">Reason</label>
+                <select id="reason">
+                    <option value="" disabled selected>Pick a reason</option>
+                    <option value="reading">Reading</option>
+                    <option value="research">Research</option>
+                    <option value="use of computer">Use of Computer</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
             <button class="submit-btn" onclick="processCheckIn()">Check-in / Log Visit</button>
         </div>
 
         <div id="successView" style="display:none;">
-            <h3 id="welcomeHeader">Success!</h3>
-            <button id="adminSuccessBtn" onclick="window.location.href='admin.html'" style="display:none;" class="submit-btn">📊 GO TO DASHBOARD</button>
-            <button onclick="fullReset()" class="submit-btn" style="background:#333;">Log Out</button>
+            <div class="success-box">
+                <h3 id="welcomeHeader">Welcome!</h3>
+                <p id="successSubtext">Your visit has been recorded.</p>
+                <button id="adminSuccessBtn" onclick="window.location.href='admin.html'" style="display:none; margin-top:15px; background:#004a99; color:white; border:none; padding:12px; width:100%; border-radius:6px; cursor:pointer; font-weight:bold;">📊 GO TO ADMIN DASHBOARD</button>
+            </div>
+            <button onclick="fullReset()" style="margin-top:20px; background:#333; color:white; border:none; padding:12px; width:100%; border-radius:6px; cursor:pointer; font-weight:bold;">Sign Out / Exit</button>
         </div>
     </div>
 
     <div class="card" id="errorCard">
-        <h2 style="color:red;">Access Denied</h2>
-        <p id="errorMessage"></p>
-        <button class="submit-btn" onclick="fullReset()">Back to Start</button>
+        <h2 style="color: #dc3545;">Access Denied</h2>
+        <p id="errorMessage" style="color: #666; margin-bottom: 30px;"></p>
+        <button class="submit-btn" onclick="fullReset()">Return to Home</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const supabaseClient = supabase.createClient('https://bekehjenxkzrvsoxqjgi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJla2VoamVueGt6cnZzb3hxamdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MTAyMjIsImV4cCI6MjA4OTM4NjIyMn0.QYcz_s_NvF6yxKBpVIP47sTcLjwsB9eUA00htYaoI9w');
-        
-        const MASTER_ADMINS = ['jcesperanza@neu.edu.ph', 'isaiahlynel.pineda@neu.edu.ph', 'janrey.maranan@neu.edu.ph', 'czesckahalie.bongco@neu.edu.ph'];
+
+        const MASTER_ADMINS = [
+            'jcesperanza@neu.edu.ph', 
+            'isaiahlynel.pineda@neu.edu.ph',
+            'janrey.maranan@neu.edu.ph',
+            'czesckahalie.bongco@neu.edu.ph'
+        ];
 
         const programsData = {
-            "College of Informatics and Computing Studies": ["BS in Information Technology", "BS in Computer Science", "BS in Information System"],
-            "College of Business Administration": ["BSBA Financial Management", "BSBA Marketing Management"]
-            // ... I can help you add the rest of your huge list here!
+            "College of Accountancy": ["BS in Accountancy", "BS in Accounting Information System"],
+            "College of Agriculture": ["BS in Agriculture"],
+            "College of Arts and Sciences": ["BA in Economics", "BA in Political Science", "BS in Biology", "BS in Psychology", "Bachelor of Public Administration"],
+            "College of Business Administration": ["BSBA Financial Management", "BSBA HR Management", "BSBA Legal Management", "BSBA Marketing Management", "BS in Entrepreneurship", "BS in Real Estate Management"],
+            "College of Communication": ["BA in Broadcasting", "BA in Communication", "BA in Journalism"],
+            "College of Informatics and Computing Studies": ["Bachelor of Library and Information Science", "BS in Computer Science", "BS in EMC (Digital Animation)", "BS in EMC (Game Dev)", "BS in Information Technology", "BS in Information System"],
+            "College of Criminology": ["BS in Criminology"],
+            "College of Education": ["Bachelor of Elementary Education", "BEEd (Preschool)", "BEEd (Special Ed)", "BSEd (MAPEH)", "BSEd (English)", "BSEd (Filipino)", "BSEd (Mathematics)", "BSEd (Science)", "BSEd (Social Studies)", "BSEd (TLE)"],
+            "College of Engineering and Architecture": ["BS in Architecture", "BS in Astronomy", "BS in Civil Engineering", "BS in Electrical Engineering", "BS in Electronics Engineering", "BS in Industrial Engineering", "BS in Mechanical Engineering"],
+            "College of Medical Technology": ["BS in Medical Technology"],
+            "College of Midwifery": ["Diploma in Midwifery"],
+            "College of Music": ["BM in Choral Conducting", "BM in Music Education", "BM in Piano", "BM in Voice"],
+            "College of Nursing": ["BS in Nursing"],
+            "College of Physical Therapy": ["BS in Physical Therapy"],
+            "College of Respiratory Therapy": ["BS in Respiratory Therapy"],
+            "School of International Relations": ["BA in Foreign Service"]
         };
+
+        async function init() {
+            const isAuthRedirect = window.location.hash.includes('access_token');
+            if (isAuthRedirect) {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) handleAuthSuccess(user);
+            } else {
+                showPage('startingPage');
+            }
+        }
+
+        function setMode(mode) {
+            localStorage.setItem('loginMode', mode);
+            document.getElementById('loginHeader').innerText = mode === 'admin' ? "Admin Portal" : "Visitor Entry";
+            showPage('loginCard');
+        }
+
+        async function triggerGoogleAuth() {
+            await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: { 
+                    queryParams: { prompt: 'select_account', hd: 'neu.edu.ph' },
+                    redirectTo: window.location.origin 
+                }
+            });
+        }
+
+        function handleAuthSuccess(user) {
+            const email = user.email.toLowerCase();
+            const mode = localStorage.getItem('loginMode');
+
+            // 1. NEU Email Check
+            if (!email.endsWith('@neu.edu.ph')) {
+                showError("You are not using this University Library's official institutional email. Access restricted.");
+                return;
+            }
+
+            // 2. Admin Check
+            if (mode === 'admin') {
+                if (MASTER_ADMINS.includes(email)) {
+                    showAdminDirect();
+                } else {
+                    showError("Sorry, you are not an authorized admin. Please log in as a visitor.");
+                }
+            } else {
+                loadVisitorForm(user);
+            }
+        }
+
+        function showAdminDirect() {
+            showPage('formCard');
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('successView').style.display = 'block';
+            document.getElementById('adminSuccessBtn').style.display = 'block';
+            document.getElementById('welcomeHeader').innerText = "Admin Access Verified";
+            document.getElementById('successSubtext').innerText = "Click below to access the management tools.";
+        }
+
+        function loadVisitorForm(user) {
+            showPage('formCard');
+            document.getElementById('formContent').style.display = 'block';
+            document.getElementById('successView').style.display = 'none';
+            document.getElementById('dispName').value = user.user_metadata.full_name || "";
+            document.getElementById('dispEmail').value = user.email;
+
+            // Populate Colleges
+            const colSelect = document.getElementById('college');
+            colSelect.innerHTML = '<option value="" disabled selected>Select College</option>';
+            Object.keys(programsData).forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.text = c;
+                colSelect.add(opt);
+            });
+        }
+
+        function updatePrograms() {
+            const college = document.getElementById('college').value;
+            const pSelect = document.getElementById('program');
+            pSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
+            if (programsData[college]) {
+                programsData[college].forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p; opt.text = p;
+                    pSelect.add(opt);
+                });
+            }
+        }
+
+        async function processCheckIn() {
+            const college = document.getElementById('college').value;
+            const program = document.getElementById('program').value;
+            const reason = document.getElementById('reason').value;
+            const email = document.getElementById('dispEmail').value;
+            const name = document.getElementById('dispName').value;
+
+            if (!college || !program || !reason) return alert("Please fill all fields.");
+
+            const response = await fetch('/check-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName: name,
+                    identifier: email,
+                    college: college,
+                    userType: program,
+                    reason: reason
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) return alert(result.message);
+
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('successView').style.display = 'block';
+            document.getElementById('welcomeHeader').innerText = `Welcome, ${result.name}!`;
+            document.getElementById('successSubtext').innerText = "Your login is successful. You may now continue inside the library.";
+            
+            // If an admin is logging in as a visitor, show them the dash button on the success screen too
+            if (MASTER_ADMINS.includes(email.toLowerCase())) {
+                document.getElementById('adminSuccessBtn').style.display = 'block';
+            }
+        }
 
         function showPage(id) {
             ['startingPage', 'selectionCard', 'loginCard', 'formCard', 'errorCard'].forEach(p => {
@@ -87,57 +254,12 @@
             });
             const target = document.getElementById(id);
             if(id === 'startingPage') target.style.display = 'flex';
-            else target.style.display = 'block';
+            else if(target) target.style.display = 'block';
         }
 
-        function setMode(mode) {
-            localStorage.setItem('loginMode', mode);
-            document.getElementById('loginHeader').innerText = mode === 'admin' ? "Admin Login" : "Visitor Login";
-            showPage('loginCard');
-        }
-
-        async function triggerGoogleAuth() {
-            await supabaseClient.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin }
-            });
-        }
-
-        async function init() {
-            const isAuthRedirect = window.location.hash.includes('access_token');
-            if (isAuthRedirect) {
-                const { data: { user } } = await supabaseClient.auth.getUser();
-                if (user) handleAuth(user);
-            } else {
-                showPage('startingPage');
-            }
-        }
-
-        function handleAuth(user) {
-            const email = user.email.toLowerCase();
-            const mode = localStorage.getItem('loginMode');
-
-            if (!email.endsWith('@neu.edu.ph')) {
-                document.getElementById('errorMessage').innerText = "Must use an @neu.edu.ph email!";
-                showPage('errorCard');
-                return;
-            }
-
-            if (mode === 'admin') {
-                if (MASTER_ADMINS.includes(email)) {
-                    showPage('formCard');
-                    document.getElementById('formContent').style.display = 'none';
-                    document.getElementById('successView').style.display = 'block';
-                    document.getElementById('adminSuccessBtn').style.display = 'block';
-                    document.getElementById('welcomeHeader').innerText = "Admin Verified";
-                } else {
-                    document.getElementById('errorMessage').innerText = "You are not an authorized Admin.";
-                    showPage('errorCard');
-                }
-            } else {
-                showPage('formCard');
-                document.getElementById('dispEmail').value = email;
-            }
+        function showError(msg) {
+            document.getElementById('errorMessage').innerText = msg;
+            showPage('errorCard');
         }
 
         async function fullReset() {
@@ -146,27 +268,7 @@
             window.location.href = window.location.origin;
         }
 
-        // Initialize on load
         init();
-
-        // Populate Colleges
-        const colSelect = document.getElementById('college');
-        Object.keys(programsData).forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c; opt.text = c;
-            colSelect.add(opt);
-        });
-
-        function updatePrograms() {
-            const col = colSelect.value;
-            const pSelect = document.getElementById('program');
-            pSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
-            programsData[col].forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p; opt.text = p;
-                pSelect.add(opt);
-            });
-        }
     </script>
 </body>
 </html>
