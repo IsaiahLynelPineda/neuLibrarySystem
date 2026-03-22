@@ -75,6 +75,11 @@
             </div>
         </div>
 
+        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <button id="tabActive" onclick="switchTab('active')" class="btn btn-blue">👤 Active Visitors</button>
+            <button id="tabBlocked" onclick="switchTab('blocked')" class="btn btn-gray">🚫 Blocked List</button>
+        </div>
+
         <table id="visitorTable">
             <thead>
                 <tr>
@@ -110,6 +115,18 @@ async function adminLogout() {
 
         let fullData = [];
 
+let currentTab = 'active'; // Keeps track of which tab we are looking at
+
+function switchTab(tab) {
+    currentTab = tab;
+    // Update button colors
+    document.getElementById('tabActive').className = tab === 'active' ? 'btn btn-blue' : 'btn btn-gray';
+    document.getElementById('tabBlocked').className = tab === 'blocked' ? 'btn btn-blue' : 'btn btn-gray';
+    
+    // Refresh the table with the existing data
+    renderTable(fullData);
+}
+
         // 1. Fetch data from Server
         async function loadData() {
             try {
@@ -138,8 +155,13 @@ async function adminLogout() {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = ''; 
 
-    data.forEach(log => {
-        // Your server.js pulls the visitor info into a 'visitors' sub-object
+    // FILTER: Only show users that match the current tab
+    const filteredData = data.filter(log => {
+        const isBlocked = log.visitors?.is_blocked || false;
+        return currentTab === 'blocked' ? isBlocked === true : isBlocked === false;
+    });
+
+    filteredData.forEach(log => {
         const v = log.visitors; 
         
         const row = `
