@@ -24,10 +24,14 @@
         #sidebar button { width: 100%; padding: 18px; background: none; border: none; color: white; text-align: left; cursor: pointer; font-size: 16px; font-weight: bold; border-left: 5px solid transparent; }
         #sidebar button:hover { background: #3e2a86; color: var(--accent-gold); border-left: 5px solid var(--accent-gold); }
 
-        header { background-color: var(--primary-dark); color: white; padding: 20px; text-align: center; position: relative; }
+        /* Header update: flexbox allows title and clock to coexist beautifully */
+        header { background-color: var(--primary-dark); color: white; padding: 20px; text-align: center; position: relative; display: flex; justify-content: center; align-items: center; min-height: 40px; }
         header h1 { margin: 0; font-size: 24px; letter-spacing: 2px; color: var(--accent-gold); }
 
-        #menu-btn { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); z-index: 1100; background: none; border: none; color: white; font-size: 30px; cursor: pointer; }
+        #menu-btn { position: absolute; left: 20px; background: none; border: none; color: white; font-size: 30px; cursor: pointer; }
+        
+        /* New Clock Style */
+        #live-clock { position: absolute; right: 20px; color: var(--accent-gold); font-weight: bold; font-family: 'Courier New', monospace; font-size: 18px; }
 
         .container { padding: 30px; max-width: 1200px; margin: auto; }
 
@@ -42,7 +46,6 @@
         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
         tr:hover { background-color: #f9f9f9; }
 
-        .status-pill { padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; }
         .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-block { background: #dc3545; color: white; }
         .btn-unblock { background: #28a745; color: white; }
@@ -61,6 +64,7 @@
 <header>
     <button id="menu-btn" onclick="toggleSidebar()">☰</button>
     <h1 id="page-header">VISIT LOGS</h1>
+    <div id="live-clock">--:--:-- --</div>
 </header>
 
 <div class="container">
@@ -75,8 +79,7 @@
                         <th>Full Name</th>
                         <th>College</th>
                         <th>Type/Course</th>
-                        <th>Status</th>
-                        <th>Reason</th>
+                        <th>Time In</th> <th>Reason</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -130,6 +133,14 @@
     let fullData = [];
     let myChart = null;
 
+    // 1. CLOCK FUNCTION (SAFE)
+    function startClock() {
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        }, 1000);
+    }
+
     function toggleSidebar() {
         const sb = document.getElementById('sidebar');
         sb.style.left = (sb.style.left === '0px') ? '-250px' : '0px';
@@ -152,15 +163,11 @@
         } catch (err) { console.error("Data Load Error:", err); }
     }
 
-    // FUNCTIONAL STATISTICS LOGIC
     function updateStats(dataToUse) {
         const todayStr = new Date().toDateString();
-        
-        // Update Cards
         document.getElementById('today-count').innerText = fullData.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
         document.getElementById('total-count').innerText = fullData.length;
         document.getElementById('filtered-count').innerText = dataToUse.length;
-        
         initChart(dataToUse);
     }
 
@@ -168,17 +175,13 @@
         const now = new Date();
         const startOfToday = new Date();
         startOfToday.setHours(0,0,0,0);
-
         let filtered = [];
-        if (type === 'daily') {
-            filtered = fullData.filter(l => new Date(l.created_at) >= startOfToday);
-        } else if (type === 'weekly') {
-            const lastWeek = new Date();
-            lastWeek.setDate(now.getDate() - 7);
+        if (type === 'daily') filtered = fullData.filter(l => new Date(l.created_at) >= startOfToday);
+        else if (type === 'weekly') {
+            const lastWeek = new Date(); lastWeek.setDate(now.getDate() - 7);
             filtered = fullData.filter(l => new Date(l.created_at) >= lastWeek);
         } else if (type === 'monthly') {
-            const lastMonth = new Date();
-            lastMonth.setMonth(now.getMonth() - 1);
+            const lastMonth = new Date(); lastMonth.setMonth(now.getMonth() - 1);
             filtered = fullData.filter(l => new Date(l.created_at) >= lastMonth);
         }
         updateStats(filtered);
@@ -188,10 +191,8 @@
         const startVal = document.getElementById('startDate').value;
         const endVal = document.getElementById('endDate').value;
         if (!startVal || !endVal) return alert("Select both dates");
-
         const start = new Date(startVal); start.setHours(0,0,0,0);
         const end = new Date(endVal); end.setHours(23,59,59,999);
-
         const filtered = fullData.filter(l => {
             const d = new Date(l.created_at);
             return d >= start && d <= end;
@@ -207,45 +208,32 @@
 
     function initChart(dataToUse) {
         const ctx = document.getElementById('visitChart').getContext('2d');
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const counts = [0, 0, 0, 0, 0, 0, 0];
-
-        dataToUse.forEach(l => {
-            const d = new Date(l.created_at).getDay();
-            counts[d]++;
-        });
-
+        dataToUse.forEach(l => { counts[new Date(l.created_at).getDay()]++; });
         if (myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: days,
-                datasets: [{
-                    label: 'Visitors',
-                    data: counts,
-                    backgroundColor: '#000033'
-                }]
+                labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                datasets: [{ label: 'Visitors', data: counts, backgroundColor: '#000033' }]
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
 
-    // TABLE & SEARCH LOGIC
     function renderTables() {
         const logsBody = document.getElementById('logsTableBody');
         const blockedBody = document.getElementById('blockedTableBody');
-        
-        // Clear existing rows
         logsBody.innerHTML = ''; 
         blockedBody.innerHTML = '';
-        
         const blockedEmails = new Set();
         let blockedCount = 0;
 
         fullData.forEach(item => {
             const v = item.visitors || {};
-            
-            // Check if user is blocked
+            // Formatting the Time In safely
+            const timeIn = new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
             if (v.is_blocked) {
                 if (!blockedEmails.has(v.email)) {
                     blockedEmails.add(v.email);
@@ -260,30 +248,21 @@
                     `);
                 }
             } else {
-                // Populate Visit Logs
                 const action = v.is_admin ? '<b>ADMIN</b>' : `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
                 logsBody.insertAdjacentHTML('beforeend', `
                     <tr>
                         <td>${v.full_name || 'N/A'}</td>
                         <td>${v.program_college || 'N/A'}</td>
                         <td>${v.user_type || 'N/A'}</td>
-                        <td><span class="status-pill" style="color:green">✅ ACTIVE</span></td>
-                        <td>${item.reason || 'N/A'}</td>
+                        <td>${timeIn}</td> <td>${item.reason || 'N/A'}</td>
                         <td>${action}</td>
                     </tr>
                 `);
             }
         });
 
-        // Re-adding the empty state feature
         if (blockedCount === 0) {
-            blockedBody.innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px; color: #666; font-weight: bold;">
-                        🚫 No users are currently blocked.
-                    </td>
-                </tr>
-            `;
+            blockedBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #666; font-weight: bold;">🚫 No users are currently blocked.</td></tr>`;
         }
     }
 
@@ -306,7 +285,9 @@
 
     async function adminLogout() { if(confirm("Logout?")) window.location.href = "/"; }
 
+    // Init everything
     loadData();
+    startClock();
 </script>
 </body>
 </html>
