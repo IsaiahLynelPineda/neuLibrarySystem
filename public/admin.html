@@ -11,153 +11,54 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-    :root {
-        --neu-blue: #004a99;
-        --neu-gold: #c8aa6e;
-        --hex-dark: #000a1a;
-        --hex-panel: #011326;
-        --hex-border: #785a28;
-        --hex-text: #f0e6d2;
-        --hex-glow: rgba(200, 170, 110, 0.3);
-    }
+        :root {
+            --primary-dark: #000033;
+            --accent-gold: #ffcc00;
+            --sidebar-bg: #2e1a66;
+            --bg-light: #f4f7f6;
+        }
 
-    body { 
-        font-family: 'Segoe UI', sans-serif; 
-        margin: 0; 
-        background: radial-gradient(circle at top right, #011326 0%, #000a1a 100%); 
-        color: var(--hex-text);
-        min-height: 100vh;
-    }
-    
-    /* Sidebar - Hextech Vertical Menu */
-    #sidebar { 
-        position: fixed; left: -250px; top: 0; width: 250px; height: 100%; 
-        background: var(--hex-panel); 
-        border-right: 1px solid var(--hex-border);
-        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-        z-index: 1000; padding-top: 80px; 
-        box-shadow: 10px 0 30px rgba(0,0,0,0.5); 
-    }
-    #sidebar button { 
-        width: 100%; padding: 20px; background: none; border: none; 
-        color: var(--hex-text); text-align: left; cursor: pointer; 
-        font-size: 14px; font-weight: bold; letter-spacing: 2px;
-        text-transform: uppercase; transition: 0.3s;
-        border-left: 3px solid transparent;
-    }
-    #sidebar button:hover { 
-        background: rgba(200, 170, 110, 0.1); 
-        color: var(--neu-gold); 
-        border-left: 3px solid var(--neu-gold);
-        text-shadow: 0 0 10px var(--hex-glow);
-    }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-light); color: #333; }
+        
+        #sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: var(--sidebar-bg); color: white; transition: 0.3s; z-index: 1000; padding-top: 80px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        #sidebar button { width: 100%; padding: 18px; background: none; border: none; color: white; text-align: left; cursor: pointer; font-size: 16px; font-weight: bold; border-left: 5px solid transparent; }
+        #sidebar button:hover { background: #3e2a86; color: var(--accent-gold); border-left: 5px solid var(--accent-gold); }
 
-    /* Header Styling */
-    header { 
-        background: rgba(1, 19, 38, 0.9); 
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--hex-border);
-        color: white; padding: 15px 20px; text-align: center; 
-        position: sticky; top: 0; display: flex; 
-        justify-content: center; align-items: center; z-index: 900;
-    }
-    header h1 { 
-        margin: 0; font-size: 20px; letter-spacing: 4px; 
-        color: var(--neu-gold); text-transform: uppercase;
-        text-shadow: 0 0 15px var(--hex-glow);
-    }
+        /* Header update: flexbox allows title and clock to coexist beautifully */
+        header { background-color: var(--primary-dark); color: white; padding: 20px; text-align: center; position: relative; display: flex; justify-content: center; align-items: center; min-height: 40px; }
+        header h1 { margin: 0; font-size: 24px; letter-spacing: 2px; color: var(--accent-gold); }
 
-    /* Update the menu button to animate its movement */
-#menu-btn { 
-    position: absolute; 
-    left: 20px; 
-    background: none; 
-    border: none; 
-    color: var(--neu-gold); 
-    font-size: 24px; 
-    cursor: pointer; 
-    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Matches sidebar speed */
-    z-index: 1100; /* Ensures it stays ABOVE the sidebar */
-}
+        #menu-btn { position: absolute; left: 20px; background: none; border: none; color: white; font-size: 30px; cursor: pointer; }
+        
+        /* New Clock Style */
+        #live-clock { position: absolute; right: 20px; color: var(--accent-gold); font-weight: bold; font-family: 'Courier New', monospace; font-size: 18px; }
 
-/* Add a subtle glow to the active page button in the sidebar */
-#sidebar button:active {
-    background: rgba(200, 170, 110, 0.3);
-}
+        .container { padding: 30px; max-width: 1200px; margin: auto; }
 
-    .container { padding: 30px; max-width: 1200px; margin: auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 6px solid var(--primary-dark); }
+        .stat-card h3 { margin: 0; color: #666; font-size: 14px; text-transform: uppercase; }
+        .stat-card .count { font-size: 42px; font-weight: bold; color: var(--primary-dark); margin: 10px 0; }
 
-    /* Hextech Stat Cards */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .stat-card { 
-        background: var(--hex-panel); padding: 25px; border: 1px solid var(--hex-border);
-        position: relative; text-align: center; overflow: hidden;
-    }
-    .stat-card::before {
-        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--neu-gold);
-    }
-    .stat-card h3 { margin: 0; color: var(--neu-gold); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
-    .stat-card .count { font-size: 42px; font-weight: bold; color: #fff; margin: 10px 0; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--primary-dark); color: white; padding: 15px; text-align: left; font-size: 13px; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:hover { background-color: #f9f9f9; }
 
-    /* Tables - Dark Mode */
-    .table-container { 
-        background: var(--hex-panel); border: 1px solid var(--hex-border); 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-    }
-    table { width: 100%; border-collapse: collapse; background: transparent; }
-    th { 
-        background: rgba(120, 90, 40, 0.2); color: var(--neu-gold); 
-        padding: 18px; text-align: left; font-size: 11px; 
-        text-transform: uppercase; letter-spacing: 1px;
-        border-bottom: 2px solid var(--hex-border);
-    }
-    td { padding: 16px; border-bottom: 1px solid rgba(120, 90, 40, 0.1); font-size: 14px; color: var(--hex-text); }
-    tr:hover { background: rgba(255, 255, 255, 0.03); }
-
-    /* Controls & Inputs */
-    #searchInput { 
-        background: var(--hex-dark); border: 1px solid var(--hex-border); 
-        color: var(--hex-text); padding: 12px; border-radius: 0;
-        outline: none; transition: 0.3s;
-    }
-    #searchInput:focus { border-color: var(--neu-gold); box-shadow: 0 0 10px var(--hex-glow); }
-
-    .btn { 
-        padding: 10px 20px; border: 1px solid var(--hex-border); 
-        font-weight: bold; cursor: pointer; text-transform: uppercase; 
-        letter-spacing: 1px; font-size: 12px; transition: 0.3s;
-    }
-    .btn-block { background: rgba(220, 53, 69, 0.2); color: #ff4e50; border-color: #ff4e50; }
-    .btn-block:hover { background: #ff4e50; color: white; }
-    .btn-unblock { background: rgba(40, 167, 69, 0.2); color: #2ecc71; border-color: #2ecc71; }
-    .btn-unblock:hover { background: #2ecc71; color: white; }
-    .btn-export { background: var(--neu-gold); color: var(--hex-dark); float: right; margin-bottom: 15px; }
-    
-    /* Filter Bar Styling */
-    .filter-bar {
-        display: flex; flex-wrap: wrap; gap: 10px; align-items: center; 
-        background: var(--hex-panel); padding: 20px; margin-bottom: 20px;
-        border: 1px solid var(--hex-border);
-    }
-    .filter-bar input[type="date"] {
-        background: var(--hex-dark); border: 1px solid var(--hex-border);
-        color: var(--hex-text); padding: 8px;
-    }
-
-    /* Chart Container */
-    .chart-box {
-        background: var(--hex-panel); padding: 25px; border: 1px solid var(--hex-border);
-        margin-top: 20px;
-    }
-</style>
-
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-block { background: #dc3545; color: white; }
+        .btn-unblock { background: #28a745; color: white; }
+        .btn-export { background: #28a745; color: white; float: right; margin-bottom: 15px; }
+    </style>
+</head>
 <body>
 
 <div id="sidebar">
     <button onclick="showPage('logs')">📋 VISIT LOGS</button>
     <button onclick="showPage('stats')">📊 STATISTICS</button>
     <button onclick="showPage('blocked')">🚫 BLOCKED USERS</button>
-    <button onclick="adminLogout()" style="margin-top: 40px; color: #ff4e50; border-top: 1px solid rgba(255,78,80,0.2);">LOG OUT</button>
+    <button onclick="adminLogout()" style="margin-top: 40px; color: #ff6666; border: none;">LOG OUT</button>
 </div>
 
 <header>
@@ -166,10 +67,73 @@
     <div id="live-clock">--:--:-- --</div>
 </header>
 
+<div class="container">
+    <div id="page-logs">
+        <button class="btn btn-export" onclick="downloadPDF()">Export to PDF</button>
+        <input type="text" id="searchInput" placeholder="Search by name or college..." onkeyup="filterTable()" style="width: 300px; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd;">
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>College</th>
+                        <th>Type/Course</th>
+                        <th>Time In</th> <th>Reason</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="page-stats" style="display:none;">
+        <div style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <button class="btn" style="background: #eee; color: #333;" onclick="filterQuick('daily')">Daily</button>
+            <button class="btn" style="background: #eee; color: #333;" onclick="filterQuick('weekly')">Weekly</button>
+            <button class="btn" style="background: #eee; color: #333;" onclick="filterQuick('monthly')">Monthly</button>
+            <div style="border-left: 1px solid #ddd; height: 30px; margin: 0 10px;"></div>
+            <input type="date" id="startDate" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <span>to</span>
+            <input type="date" id="endDate" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <button class="btn" style="background: var(--primary-dark); color: white;" onclick="applyCustomFilter()">Apply Custom</button>
+            <button class="btn" style="background: #666; color: white;" onclick="resetStats()">Reset</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Filtered Results</h3><div class="count" id="filtered-count">0</div></div>
+            <div class="stat-card"><h3>Today (Total)</h3><div class="count" id="today-count">0</div></div>
+            <div class="stat-card"><h3>Total Logs</h3><div class="count" id="total-count">0</div></div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <canvas id="visitChart" style="max-height: 400px;"></canvas>
+        </div>
+    </div>
+
+    <div id="page-blocked" style="display:none;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>College</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="blockedTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
     let fullData = [];
     let myChart = null;
 
+    // 1. CLOCK FUNCTION (SAFE)
     function startClock() {
         setInterval(() => {
             const now = new Date();
@@ -177,33 +141,18 @@
         }, 1000);
     }
 
-    // UPDATED: Simple toggle logic
     function toggleSidebar() {
         const sb = document.getElementById('sidebar');
-        const menuBtn = document.getElementById('menu-btn');
-        if (sb.style.left === '0px') {
-            sb.style.left = '-250px';
-            menuBtn.style.left = '20px'; // Back to original position
-        } else {
-            sb.style.left = '0px';
-            menuBtn.style.left = '260px'; // Move with the sidebar so it's always clickable
-        }
+        sb.style.left = (sb.style.left === '0px') ? '-250px' : '0px';
     }
 
-    // UPDATED: Navigation logic
     function showPage(pageId) {
         ['logs', 'stats', 'blocked'].forEach(p => document.getElementById('page-' + p).style.display = 'none');
         document.getElementById('page-' + pageId).style.display = 'block';
         document.getElementById('page-header').innerText = pageId.toUpperCase().replace('-', ' ');
-        
-        // Close sidebar ONLY after a selection is made
-        const sb = document.getElementById('sidebar');
-        if (sb.style.left === '0px') toggleSidebar();
-
+        toggleSidebar();
         if(pageId === 'stats') updateStats(fullData);
     }
-
-    // ... (loadData, updateStats, filterQuick, applyCustomFilter, resetStats stay the same) ...
 
     async function loadData() {
         try {
@@ -257,7 +206,6 @@
         updateStats(fullData);
     }
 
-    // UPDATED: High-Contrast Gold Chart
     function initChart(dataToUse) {
         const ctx = document.getElementById('visitChart').getContext('2d');
         const counts = [0, 0, 0, 0, 0, 0, 0];
@@ -267,29 +215,11 @@
             type: 'bar',
             data: {
                 labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                datasets: [{ 
-                    label: 'Visitors', 
-                    data: counts, 
-                    backgroundColor: '#c8aa6e', // Hextech Gold
-                    borderColor: '#785a28',
-                    borderWidth: 1
-                }]
+                datasets: [{ label: 'Visitors', data: counts, backgroundColor: '#000033' }]
             },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                scales: {
-                    y: { ticks: { color: '#f0e6d2' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    x: { ticks: { color: '#f0e6d2' }, grid: { display: false } }
-                },
-                plugins: {
-                    legend: { labels: { color: '#c8aa6e', font: { weight: 'bold' } } }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false }
         });
     }
-
-    // ... (renderTables, toggleBlock, filterTable, downloadPDF, adminLogout stay the same) ...
 
     function renderTables() {
         const logsBody = document.getElementById('logsTableBody');
@@ -301,6 +231,7 @@
 
         fullData.forEach(item => {
             const v = item.visitors || {};
+            // Formatting the Time In safely
             const timeIn = new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
             if (v.is_blocked) {
@@ -317,7 +248,7 @@
                     `);
                 }
             } else {
-                const action = v.is_admin ? '<span style="color:var(--neu-gold)">ADMIN</span>' : `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
+                const action = v.is_admin ? '<b>ADMIN</b>' : `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
                 logsBody.insertAdjacentHTML('beforeend', `
                     <tr>
                         <td>${v.full_name || 'N/A'}</td>
@@ -352,39 +283,11 @@
         });
     }
 
-    function downloadPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.setTextColor(0, 0, 51);
-        doc.text("NEU Library Visit Logs Report", 14, 20);
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
-        const columns = ["Full Name", "College", "Type", "Time In", "Reason"];
-        const rows = [];
-        const tableRows = document.querySelectorAll("#logsTableBody tr");
-        tableRows.forEach(row => {
-            if (row.style.display !== "none") {
-                const cells = row.querySelectorAll("td");
-                if (cells.length >= 5) {
-                    rows.push([cells[0].innerText, cells[1].innerText, cells[2].innerText, cells[3].innerText, cells[4].innerText]);
-                }
-            }
-        });
-        doc.autoTable({
-            head: [columns],
-            body: rows,
-            startY: 35,
-            theme: 'striped',
-            headStyles: { fillColor: [0, 0, 51] },
-            styles: { fontSize: 9 }
-        });
-        doc.save(`NEU_Library_Logs_${new Date().toISOString().slice(0,10)}.pdf`);
-    }
 
+    
     async function adminLogout() { if(confirm("Logout?")) window.location.href = "/"; }
 
+    // Init everything
     loadData();
     startClock();
 </script>
