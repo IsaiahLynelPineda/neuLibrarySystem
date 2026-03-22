@@ -14,26 +14,27 @@ const MASTER_ADMINS = [
 ];
 
 // --- 2. THE AUTO-SYNC FUNCTION (RUNS ON STARTUP) ---
-// --- 2. THE AUTO-SYNC FUNCTION (UPDATED TO FIX NULL NAME ERROR) ---
 async function syncAdmins() {
-    console.log("🔄 Syncing Admin List with Supabase...");
+    console.log("🔄 Starting Full Admin Sync...");
+
+    // STEP A: Reset EVERYONE to false first (so old admins are removed)
+    await supabase
+        .from('visitors')
+        .update({ is_admin: false })
+        .not('email', 'in', `(${MASTER_ADMINS.join(',')})`); // Anyone NOT in your list becomes false
+
+    // STEP B: Set your Master List to true
     for (const email of MASTER_ADMINS) {
-        const { error } = await supabase
+        await supabase
             .from('visitors')
             .upsert({ 
                 email: email.toLowerCase(), 
                 is_admin: true,
-                // This provides a temporary name so the database doesn't complain
                 full_name: email.split('@')[0] 
             }, { onConflict: 'email' });
-            
-        if (error) {
-            console.error(`❌ Error syncing ${email}:`, error.message);
-        } else {
-            console.log(`✅ Synced: ${email}`);
-        }
     }
-    console.log("🏁 Admin Sync Process Finished.");
+    
+    console.log("🏁 Supabase is now perfectly synced with your Code.");
 }
 syncAdmins(); // Execute immediately when server starts
 

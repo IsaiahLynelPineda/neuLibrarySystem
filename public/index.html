@@ -157,8 +157,27 @@
 
     function loadForm(user) {
         showPage('formCard');
+        const userEmail = user.email.toLowerCase();
+        
+        // Fill the hidden fields just in case they decide to check-in anyway
         document.getElementById('dispName').value = user.user_metadata.full_name || "";
         document.getElementById('dispEmail').value = user.email || "";
+
+        // --- THE INSTANT ADMIN LIST ---
+        const adminEmails = [
+            'jcesperanza@neu.edu.ph', 
+            'isaiahlynel.pineda@neu.edu.ph',
+            'janrey.maranan@neu.edu.ph',
+            'czesckahalie.bongco@neu.edu.ph'
+        ];
+
+        // If the user is an admin, skip the form and show the dashboard button immediately
+        if (adminEmails.includes(userEmail)) {
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('successView').style.display = 'block';
+            document.getElementById('adminSuccessBtn').style.display = 'block';
+            document.getElementById('welcomeHeader').innerText = "Admin Access Verified";
+        }
     }
 
     function updatePrograms() {
