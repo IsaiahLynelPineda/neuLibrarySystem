@@ -20,38 +20,22 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-light); color: #333; }
         
-        /* Sidebar - stays fixed to the screen */
         #sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: var(--sidebar-bg); color: white; transition: 0.3s; z-index: 1000; padding-top: 80px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
         #sidebar button { width: 100%; padding: 18px; background: none; border: none; color: white; text-align: left; cursor: pointer; font-size: 16px; font-weight: bold; border-left: 5px solid transparent; }
         #sidebar button:hover { background: #3e2a86; color: var(--accent-gold); border-left: 5px solid var(--accent-gold); }
 
-        /* Header - moves when you scroll */
         header { background-color: var(--primary-dark); color: white; padding: 20px; text-align: center; position: relative; }
         header h1 { margin: 0; font-size: 24px; letter-spacing: 2px; color: var(--accent-gold); }
 
-        /* The Menu Button - now anchored to the Header */
-        #menu-btn { 
-            position: absolute; 
-            top: 50%; 
-            left: 20px; 
-            transform: translateY(-50%); 
-            z-index: 1100; 
-            background: none; 
-            border: none; 
-            color: white; 
-            font-size: 30px; 
-            cursor: pointer; 
-        }
+        #menu-btn { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); z-index: 1100; background: none; border: none; color: white; font-size: 30px; cursor: pointer; }
 
         .container { padding: 30px; max-width: 1200px; margin: auto; }
 
-        /* Statistics Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 6px solid var(--primary-dark); }
         .stat-card h3 { margin: 0; color: #666; font-size: 14px; text-transform: uppercase; }
         .stat-card .count { font-size: 42px; font-weight: bold; color: var(--primary-dark); margin: 10px 0; }
 
-        /* Tables */
         .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; }
         th { background: var(--primary-dark); color: white; padding: 15px; text-align: left; font-size: 13px; text-transform: uppercase; }
@@ -102,11 +86,24 @@
     </div>
 
     <div id="page-stats" style="display:none;">
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Today</h3><div class="count" id="today-count">0</div></div>
-            <div class="stat-card"><h3>Weekly</h3><div class="count" id="week-count">0</div></div>
-            <div class="stat-card"><h3>Monthly</h3><div class="count" id="month-count">0</div></div>
+        <div style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <button class="btn" style="background: #eee; color: #333;" onclick="filterQuick('daily')">Daily</button>
+            <button class="btn" style="background: #eee; color: #333;" onclick="filterQuick('weekly')">Weekly</button>
+            <button class="btn" style="background: #eee; color: #333;" onclick="filterQuick('monthly')">Monthly</button>
+            <div style="border-left: 1px solid #ddd; height: 30px; margin: 0 10px;"></div>
+            <input type="date" id="startDate" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <span>to</span>
+            <input type="date" id="endDate" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <button class="btn" style="background: var(--primary-dark); color: white;" onclick="applyCustomFilter()">Apply Custom</button>
+            <button class="btn" style="background: #666; color: white;" onclick="resetStats()">Reset</button>
         </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Filtered Results</h3><div class="count" id="filtered-count">0</div></div>
+            <div class="stat-card"><h3>Today (Total)</h3><div class="count" id="today-count">0</div></div>
+            <div class="stat-card"><h3>Total Logs</h3><div class="count" id="total-count">0</div></div>
+        </div>
+        
         <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
             <canvas id="visitChart" style="max-height: 400px;"></canvas>
         </div>
@@ -130,6 +127,9 @@
 </div>
 
 <script>
+    let fullData = [];
+    let myChart = null;
+
     function toggleSidebar() {
         const sb = document.getElementById('sidebar');
         sb.style.left = (sb.style.left === '0px') ? '-250px' : '0px';
@@ -140,98 +140,125 @@
         document.getElementById('page-' + pageId).style.display = 'block';
         document.getElementById('page-header').innerText = pageId.toUpperCase().replace('-', ' ');
         toggleSidebar();
-        if(pageId === 'stats') initChart();
+        if(pageId === 'stats') updateStats(fullData);
     }
-
-    let fullData = [];
 
     async function loadData() {
         try {
             const res = await fetch('/admin-stats');
             fullData = await res.json();
-            updateStats();
+            updateStats(fullData);
             renderTables();
         } catch (err) { console.error("Data Load Error:", err); }
     }
 
-    function updateStats() {
+    // FUNCTIONAL STATISTICS LOGIC
+    function updateStats(dataToUse) {
         const todayStr = new Date().toDateString();
+        
+        // Update Cards
         document.getElementById('today-count').innerText = fullData.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
-        document.getElementById('week-count').innerText = fullData.length;
-        document.getElementById('month-count').innerText = fullData.length;
+        document.getElementById('total-count').innerText = fullData.length;
+        document.getElementById('filtered-count').innerText = dataToUse.length;
+        
+        initChart(dataToUse);
     }
 
+    function filterQuick(type) {
+        const now = new Date();
+        const startOfToday = new Date();
+        startOfToday.setHours(0,0,0,0);
+
+        let filtered = [];
+        if (type === 'daily') {
+            filtered = fullData.filter(l => new Date(l.created_at) >= startOfToday);
+        } else if (type === 'weekly') {
+            const lastWeek = new Date();
+            lastWeek.setDate(now.getDate() - 7);
+            filtered = fullData.filter(l => new Date(l.created_at) >= lastWeek);
+        } else if (type === 'monthly') {
+            const lastMonth = new Date();
+            lastMonth.setMonth(now.getMonth() - 1);
+            filtered = fullData.filter(l => new Date(l.created_at) >= lastMonth);
+        }
+        updateStats(filtered);
+    }
+
+    function applyCustomFilter() {
+        const startVal = document.getElementById('startDate').value;
+        const endVal = document.getElementById('endDate').value;
+        if (!startVal || !endVal) return alert("Select both dates");
+
+        const start = new Date(startVal); start.setHours(0,0,0,0);
+        const end = new Date(endVal); end.setHours(23,59,59,999);
+
+        const filtered = fullData.filter(l => {
+            const d = new Date(l.created_at);
+            return d >= start && d <= end;
+        });
+        updateStats(filtered);
+    }
+
+    function resetStats() {
+        document.getElementById('startDate').value = '';
+        document.getElementById('endDate').value = '';
+        updateStats(fullData);
+    }
+
+    function initChart(dataToUse) {
+        const ctx = document.getElementById('visitChart').getContext('2d');
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+
+        dataToUse.forEach(l => {
+            const d = new Date(l.created_at).getDay();
+            counts[d]++;
+        });
+
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: days,
+                datasets: [{
+                    label: 'Visitors',
+                    data: counts,
+                    backgroundColor: '#000033'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // TABLE & SEARCH LOGIC
     function renderTables() {
         const logsBody = document.getElementById('logsTableBody');
         const blockedBody = document.getElementById('blockedTableBody');
-        logsBody.innerHTML = '';
-        blockedBody.innerHTML = '';
-
+        logsBody.innerHTML = ''; blockedBody.innerHTML = '';
         const blockedEmails = new Set();
 
         fullData.forEach(item => {
             const v = item.visitors || {};
-            const isBlocked = v.is_blocked || false;
-            const isAdmin = v.is_admin || false;
-
-            if (isBlocked) {
+            if (v.is_blocked) {
                 if (!blockedEmails.has(v.email)) {
                     blockedEmails.add(v.email);
-                    blockedBody.insertAdjacentHTML('beforeend', `
-                        <tr>
-                            <td>${v.full_name || 'Unknown'}</td>
-                            <td>${v.program_college || 'N/A'}</td>
-                            <td>${v.email}</td>
-                            <td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock User</button></td>
-                        </tr>
-                    `);
+                    blockedBody.insertAdjacentHTML('beforeend', `<tr><td>${v.full_name}</td><td>${v.program_college}</td><td>${v.email}</td><td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock</button></td></tr>`);
                 }
             } else {
-                const actionBtn = isAdmin ? `<b style="color:#000033">ADMIN</b>` : 
-                    `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
-
-                logsBody.insertAdjacentHTML('beforeend', `
-                    <tr>
-                        <td>${v.full_name || 'N/A'}</td>
-                        <td>${v.program_college || 'N/A'}</td>
-                        <td>${v.user_type || 'N/A'}</td>
-                        <td><span class="status-pill" style="color:green">✅ ACTIVE</span></td>
-                        <td>${item.reason || 'N/A'}</td>
-                        <td>${actionBtn}</td>
-                    </tr>
-                `);
+                const action = v.is_admin ? '<b>ADMIN</b>' : `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
+                logsBody.insertAdjacentHTML('beforeend', `<tr><td>${v.full_name || 'N/A'}</td><td>${v.program_college || 'N/A'}</td><td>${v.user_type || 'N/A'}</td><td>✅ ACTIVE</td><td>${item.reason || 'N/A'}</td><td>${action}</td></tr>`);
             }
         });
-
-        if (blockedEmails.size === 0) {
-            blockedBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #666;">🚫 No users blocked.</td></tr>`;
-        }
     }
 
-    async function toggleBlock(email, newStatus) {
-        if (!confirm(`Are you sure?`)) return;
+    async function toggleBlock(email, status) {
+        if (!confirm("Are you sure?")) return;
         const res = await fetch('/toggle-block', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, blockStatus: newStatus })
+            body: JSON.stringify({ email, blockStatus: status })
         });
         if (res.ok) loadData();
-    }
-
-    function initChart() {
-        const ctx = document.getElementById('visitChart').getContext('2d');
-        if (window.myChart) window.myChart.destroy();
-        window.myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                datasets: [{
-                    label: 'Library Visitors',
-                    data: [12, 19, 3, 5, 2, 3],
-                    backgroundColor: '#000033'
-                }]
-            }
-        });
     }
 
     function filterTable() {
@@ -241,9 +268,7 @@
         });
     }
 
-    async function adminLogout() {
-        if(confirm("Logout?")) window.location.href = "/";
-    }
+    async function adminLogout() { if(confirm("Logout?")) window.location.href = "/"; }
 
     loadData();
 </script>
