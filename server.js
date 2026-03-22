@@ -16,7 +16,7 @@ app.post('/check-in', async (req, res) => {
     // 1. HARDCODED ADMIN LIST
     const adminEmails = [
         'jcesperanza@neu.edu.ph', 
-        'isaiahlynel.pineda@neu.edu.ph'
+        'isaiahlynel.pineda@neu.edu.ph',
         'janrey.maranan@neu.edu.ph'
     ]; 
     
