@@ -158,7 +158,7 @@ function switchTab(tab) {
     let displayData = [];
 
     if (currentTab === 'blocked') {
-        // --- BLOCKED TAB: Group by email so each person appears ONCE ---
+        // --- BLOCKED TAB: Group by email ---
         const uniqueUsers = new Map();
         data.forEach(log => {
             const v = log.visitors;
@@ -168,17 +168,26 @@ function switchTab(tab) {
         });
         displayData = Array.from(uniqueUsers.values());
     } else {
-        // --- ACTIVE TAB: Show EVERY log entry (The full history) ---
+        // --- ACTIVE TAB: Show EVERY log entry ---
         displayData = data.filter(log => !log.visitors?.is_blocked);
     }
 
-    // Render the decided data
+    // --- NEW: EMPTY STATE CHECK ---
+    if (displayData.length === 0) {
+        const message = currentTab === 'blocked' ? "No currently blocked users." : "No visitor logs found for this period.";
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #888; font-style: italic;">
+                    ${message}
+                </td>
+            </tr>
+        `;
+        return; // Stop here so we don't try to loop through empty data
+    }
+
+    // --- RENDER DATA (Your existing loop) ---
     displayData.forEach(item => {
-        // In the active tab, 'item' is the log. In the blocked tab, it's the unique user.
-        // We use 'v' to handle both cases smoothly.
         const v = item.visitors || item; 
-        const logDate = item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A';
-        
         const row = `
             <tr>
                 <td>${v?.full_name || 'Unknown'}</td>
