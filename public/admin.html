@@ -302,9 +302,25 @@
             type: 'bar',
             data: {
                 labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                datasets: [{ label: 'Visitors', data: counts, backgroundColor: '#000033' }]
+                datasets: [{ 
+                    label: 'Visitors', 
+                    data: counts, 
+                    backgroundColor: '#ff007f', // Jinx Neon Pink
+                    borderColor: '#ff66b2',     // Lighter Pink highlight
+                    borderWidth: 2
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: {
+                    y: { ticks: { color: '#f0e6d2' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#f0e6d2' }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#ff007f' } }
+                }
+            }
         });
     }
 
