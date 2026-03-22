@@ -157,7 +157,6 @@
     logsBody.innerHTML = '';
     blockedBody.innerHTML = '';
 
-    // Tracker to ensure blocked users only appear ONCE in the blocked list
     const blockedEmails = new Set();
 
     fullData.forEach(item => {
@@ -165,9 +164,7 @@
         const isBlocked = v.is_blocked || false;
         const isAdmin = v.is_admin || false;
 
-        // --- NEW LOGIC START ---
         if (isBlocked) {
-            // 1. If blocked, only send to the Blocked Page (and only once)
             if (!blockedEmails.has(v.email)) {
                 blockedEmails.add(v.email);
                 blockedBody.insertAdjacentHTML('beforeend', `
@@ -180,7 +177,6 @@
                 `);
             }
         } else {
-            // 2. If NOT blocked (Active), show them in the Visit Logs
             const actionBtn = isAdmin ? `<b style="color:#000033">ADMIN</b>` : 
                 `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
 
@@ -195,8 +191,22 @@
                 </tr>
             `);
         }
-        // --- NEW LOGIC END ---
     });
+
+    // Handle Empty Blocked List State
+    if (blockedEmails.size === 0) {
+        blockedBody.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 40px; color: #666; font-weight: 500;">
+                    🚫 No users are currently blocked.
+                </td>
+            </tr>`;
+    }
+
+    // Handle Empty Logs State (Optional, but good practice)
+    if (logsBody.children.length === 0) {
+        logsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No visit logs found.</td></tr>`;
+    }
 }
 
     async function toggleBlock(email, newStatus) {
