@@ -234,21 +234,57 @@
     function renderTables() {
         const logsBody = document.getElementById('logsTableBody');
         const blockedBody = document.getElementById('blockedTableBody');
-        logsBody.innerHTML = ''; blockedBody.innerHTML = '';
+        
+        // Clear existing rows
+        logsBody.innerHTML = ''; 
+        blockedBody.innerHTML = '';
+        
         const blockedEmails = new Set();
+        let blockedCount = 0;
 
         fullData.forEach(item => {
             const v = item.visitors || {};
+            
+            // Check if user is blocked
             if (v.is_blocked) {
                 if (!blockedEmails.has(v.email)) {
                     blockedEmails.add(v.email);
-                    blockedBody.insertAdjacentHTML('beforeend', `<tr><td>${v.full_name}</td><td>${v.program_college}</td><td>${v.email}</td><td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock</button></td></tr>`);
+                    blockedCount++;
+                    blockedBody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td>${v.full_name || 'Unknown'}</td>
+                            <td>${v.program_college || 'N/A'}</td>
+                            <td>${v.email}</td>
+                            <td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock</button></td>
+                        </tr>
+                    `);
                 }
             } else {
+                // Populate Visit Logs
                 const action = v.is_admin ? '<b>ADMIN</b>' : `<button class="btn btn-block" onclick="toggleBlock('${v.email}', true)">Block</button>`;
-                logsBody.insertAdjacentHTML('beforeend', `<tr><td>${v.full_name || 'N/A'}</td><td>${v.program_college || 'N/A'}</td><td>${v.user_type || 'N/A'}</td><td>✅ ACTIVE</td><td>${item.reason || 'N/A'}</td><td>${action}</td></tr>`);
+                logsBody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td>${v.full_name || 'N/A'}</td>
+                        <td>${v.program_college || 'N/A'}</td>
+                        <td>${v.user_type || 'N/A'}</td>
+                        <td><span class="status-pill" style="color:green">✅ ACTIVE</span></td>
+                        <td>${item.reason || 'N/A'}</td>
+                        <td>${action}</td>
+                    </tr>
+                `);
             }
         });
+
+        // Re-adding the empty state feature
+        if (blockedCount === 0) {
+            blockedBody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px; color: #666; font-weight: bold;">
+                        🚫 No users are currently blocked.
+                    </td>
+                </tr>
+            `;
+        }
     }
 
     async function toggleBlock(email, status) {
