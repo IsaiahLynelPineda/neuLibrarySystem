@@ -213,39 +213,41 @@
         }
 
         async function processCheckIn() {
-            const college = document.getElementById('college').value;
-            const program = document.getElementById('program').value;
-            const reason = document.getElementById('reason').value;
-            const email = document.getElementById('dispEmail').value;
-            const name = document.getElementById('dispName').value;
+    const college = document.getElementById('college').value;
+    const program = document.getElementById('program').value;
+    const reason = document.getElementById('reason').value;
+    const email = document.getElementById('dispEmail').value;
+    const name = document.getElementById('dispName').value;
 
-            if (!college || !program || !reason) return alert("Please fill all fields.");
+    if (!college || !program || !reason) return alert("Please fill all fields.");
 
-            const response = await fetch('/check-in', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fullName: name,
-                    identifier: email,
-                    college: college,
-                    userType: program,
-                    reason: reason
-                })
-            });
+    const response = await fetch('/check-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            fullName: name,
+            identifier: email,
+            college: college,
+            userType: program,
+            reason: reason
+        })
+    });
 
-            const result = await response.json();
-            if (!response.ok) return alert(result.message);
+    const result = await response.json();
+    if (!response.ok) return alert(result.message);
 
-            document.getElementById('formContent').style.display = 'none';
-            document.getElementById('successView').style.display = 'block';
-            document.getElementById('welcomeHeader').innerText = `Welcome, ${result.name}!`;
-            document.getElementById('successSubtext').innerText = "Your login is successful. You may now continue inside the library.";
-            
-            // If an admin is logging in as a visitor, show them the dash button on the success screen too
-            if (MASTER_ADMINS.includes(email.toLowerCase())) {
-                document.getElementById('adminSuccessBtn').style.display = 'block';
-            }
-        }
+    // --- UPDATED SUCCESS LOGIC ---
+    document.getElementById('formContent').style.display = 'none';
+    document.getElementById('successView').style.display = 'block';
+    
+    // 1. Show standard visitor greeting
+    document.getElementById('welcomeHeader').innerText = `Welcome, ${result.name}!`;
+    document.getElementById('successSubtext').innerText = "Your login is successful. You may now continue inside the library.";
+    
+    // 2. FORCE Admin Button to stay HIDDEN 
+    // (We remove the 'if MASTER_ADMINS' check that was here before)
+    document.getElementById('adminSuccessBtn').style.display = 'none'; 
+}
 
         function showPage(id) {
             ['startingPage', 'selectionCard', 'loginCard', 'formCard', 'errorCard'].forEach(p => {
