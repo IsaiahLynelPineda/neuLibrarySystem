@@ -62,7 +62,7 @@
             <div style="text-align: left;">
                 <label>College / Affiliation</label>
                 <select id="college" onchange="updatePrograms()">
-                    <option value="" disabled selected>Select Option</option>
+                    <option value="" disabled selected>Select College</option>
                 </select>
                 <label style="margin-top:15px;">Program / Faculty</label>
                 <select id="program"><option value="" disabled selected>Select Option</option></select>
@@ -225,17 +225,37 @@
         }
 
         function updatePrograms() {
-            const college = document.getElementById('college').value;
-            const pSelect = document.getElementById('program');
-            pSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
-            if (programsData[college]) {
-                programsData[college].forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p; opt.text = p;
-                    pSelect.add(opt);
-                });
-            }
-        }
+    const college = document.getElementById('college').value;
+    const pSelect = document.getElementById('program');
+    
+    // Reset the dropdown
+    pSelect.innerHTML = '<option value="" disabled selected>Select Option</option>';
+    
+    // 1. Add Faculty and Staff at the very top
+    const topOptions = ["Faculty", "Staff"];
+    topOptions.forEach(text => {
+        const opt = document.createElement('option');
+        opt.value = text;
+        opt.text = text;
+        pSelect.add(opt);
+    });
+
+    // 2. Add a visual separator
+    const sep = document.createElement('option');
+    sep.disabled = true;
+    sep.text = "──────────";
+    pSelect.add(sep);
+
+    // 3. Add the rest of the college programs as usual
+    if (programsData[college]) {
+        programsData[college].forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p; 
+            opt.text = p;
+            pSelect.add(opt);
+        });
+    }
+}
 
         async function processCheckIn() {
     const college = document.getElementById('college').value;
