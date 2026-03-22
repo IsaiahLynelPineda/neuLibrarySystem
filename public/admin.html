@@ -390,7 +390,50 @@
         });
     }
 
+function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
 
+        // 1. Add Title
+        doc.setFontSize(18);
+        doc.setTextColor(0, 74, 153); // NEU Blue
+        doc.text("NEU Library - Visitation Logs", 14, 20);
+        
+        // 2. Add Timestamp
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+
+        // 3. Extract data from the table
+        const rows = [];
+        const tableRows = document.querySelectorAll("#logsTableBody tr");
+        
+        tableRows.forEach(row => {
+            const rowData = [];
+            const cols = row.querySelectorAll("td");
+            // We take only the first 5 columns (Name, College, Type, Time, Reason)
+            // We skip the last column because it contains the "Block" button
+            for (let i = 0; i < 5; i++) {
+                rowData.push(cols[i] ? cols[i].innerText : "");
+            }
+            if (row.style.display !== "none") { // Only export visible (filtered) rows
+                rows.push(rowData);
+            }
+        });
+
+        // 4. Create the PDF Table
+        doc.autoTable({
+            head: [['Full Name', 'College', 'Type/Course', 'Time In', 'Reason']],
+            body: rows,
+            startY: 35,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 74, 153] }, // Matches NEU Blue
+            styles: { fontSize: 9 }
+        });
+
+        // 5. Save the file
+        doc.save("NEU_Library_Logs.pdf");
+    }
     
     async function adminLogout() { if(confirm("Logout?")) window.location.href = "/"; }
 
