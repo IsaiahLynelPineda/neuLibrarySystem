@@ -8,105 +8,114 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
-        header { background-color: #000033; color: white; padding: 1rem; text-align: center; position: relative; }
-        .container { padding: 20px; max-width: 1200px; margin: auto; }
-        
-        /* Sidebar Styling (Purple Theme) */
-        #sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: #2e1a66; color: white; transition: 0.3s; z-index: 1000; padding-top: 60px; }
-        #sidebar button { width: 100%; padding: 15px; background: none; border: none; color: white; text-align: left; cursor: pointer; font-size: 18px; font-weight: bold; }
-        #sidebar button:hover { background: #3e2a86; color: #ffcc00; }
+        :root {
+            --primary-dark: #000033;
+            --accent-gold: #ffcc00;
+            --sidebar-bg: #2e1a66;
+            --bg-light: #f4f7f6;
+        }
 
-        /* Stats Cards (Now in Statistics Page) */
-        .stats-container { display: flex; gap: 20px; margin-bottom: 25px; justify-content: center; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 200px; text-align: center; border-top: 5px solid #2e1a66; }
-        .card .count { font-size: 2.5rem; font-weight: bold; color: #2e1a66; margin: 10px 0; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-light); color: #333; }
         
-        /* Controls */
-        .controls { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-blue { background: #004a99; color: white; }
-        .btn-green { background: #28a745; color: white; }
-        .btn-red { background: #dc3545; color: white; }
-        .btn-gray { background: #6c757d; color: white; }
+        /* Sidebar */
+        #sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: var(--sidebar-bg); color: white; transition: 0.3s; z-index: 1000; padding-top: 80px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        #sidebar button { width: 100%; padding: 18px; background: none; border: none; color: white; text-align: left; cursor: pointer; font-size: 16px; font-weight: bold; border-left: 5px solid transparent; }
+        #sidebar button:hover { background: #3e2a86; color: var(--accent-gold); border-left: 5px solid var(--accent-gold); }
 
-        /* Table Styling (Match Screenshot) */
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 5px; overflow: hidden; }
-        th { background-color: #000033; color: white; padding: 15px; text-transform: uppercase; font-size: 14px; }
-        td { padding: 15px; border-bottom: 1px solid #ddd; text-align: left; }
+        /* Header */
+        header { background-color: var(--primary-dark); color: white; padding: 20px; text-align: center; position: relative; }
+        header h1 { margin: 0; font-size: 24px; letter-spacing: 2px; color: var(--accent-gold); }
+
+        .container { padding: 30px; max-width: 1200px; margin: auto; }
+
+        /* Statistics Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 6px solid var(--primary-dark); }
+        .stat-card h3 { margin: 0; color: #666; font-size: 14px; text-transform: uppercase; }
+        .stat-card .count { font-size: 42px; font-weight: bold; color: var(--primary-dark); margin: 10px 0; }
+
+        /* Tables */
+        .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--primary-dark); color: white; padding: 15px; text-align: left; font-size: 13px; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:hover { background-color: #f9f9f9; }
+
+        /* Status & Buttons */
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-block { background: #dc3545; color: white; }
+        .btn-unblock { background: #28a745; color: white; }
+        .btn-export { background: #28a745; color: white; float: right; margin-bottom: 15px; }
         
-        .page-title { color: #ffcc00; text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
-        .admin-text { color: #000033; font-weight: bold; }
+        #menu-btn { position: fixed; top: 15px; left: 15px; z-index: 1100; background: none; border: none; color: white; font-size: 30px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<button onclick="toggleSidebar()" style="position: fixed; top: 15px; left: 15px; z-index: 1100; background: none; border: none; cursor: pointer; color: white; font-size: 30px;">☰</button>
+<button id="menu-btn" onclick="toggleSidebar()">☰</button>
 
 <div id="sidebar">
-    <button onclick="showPage('logs')">📋 Visit Logs</button>
-    <button onclick="showPage('stats')">📊 Statistics</button>
-    <button onclick="showPage('blocked')">🚫 Blocked</button>
-    <button onclick="adminLogout()" style="margin-top: 50px; color: #ff6666;">Log Out</button>
+    <button onclick="showPage('logs')">📋 VISIT LOGS</button>
+    <button onclick="showPage('stats')">📊 STATISTICS</button>
+    <button onclick="showPage('blocked')">🚫 BLOCKED USERS</button>
+    <button onclick="adminLogout()" style="margin-top: 40px; color: #ff6666; border: none;">LOG OUT</button>
 </div>
 
 <header>
-    <h1 id="header-title">VISIT LOGS</h1>
+    <h1 id="page-header">VISIT LOGS</h1>
 </header>
 
 <div class="container">
     <div id="page-logs">
-        <div class="controls">
-            <div class="row">
-                <input type="text" id="searchInput" placeholder="Search name or college..." onkeyup="filterTable()" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <button class="btn btn-green" onclick="downloadPDF()">Export to PDF</button>
-            </div>
+        <button class="btn btn-export" onclick="downloadPDF()">Export to PDF</button>
+        <input type="text" id="searchInput" placeholder="Search by name or college..." onkeyup="filterTable()" style="width: 300px; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd;">
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>College</th>
+                        <th>Type/Course</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody"></tbody>
+            </table>
         </div>
-
-        <table id="visitorTable">
-            <thead>
-                <tr>
-                    <th>Full Name</th>
-                    <th>College</th>
-                    <th>Type/Course</th>
-                    <th>Status</th>
-                    <th>Reason</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
     </div>
 
     <div id="page-stats" style="display:none;">
-        <h2 class="page-title" style="color: #2e1a66;">Summary Overview</h2>
-        <div class="stats-container">
-            <div class="card"><h3>TODAY</h3><div class="count" id="today-count">0</div></div>
-            <div class="card"><h3>WEEKLY</h3><div class="count" id="week-count">0</div></div>
-            <div class="card"><h3>MONTHLY</h3><div class="count" id="month-count">0</div></div>
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Today</h3><div class="count" id="today-count">0</div></div>
+            <div class="stat-card"><h3>Weekly</h3><div class="count" id="week-count">0</div></div>
+            <div class="stat-card"><h3>Monthly</h3><div class="count" id="month-count">0</div></div>
         </div>
-        <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
-            <p style="color: #666;">[ Chart Integration Area ]</p>
+        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <canvas id="visitChart" style="max-height: 400px;"></canvas>
         </div>
     </div>
 
     <div id="page-blocked" style="display:none;">
-        <h2 class="page-title" style="color: #2e1a66;">Blocked Users</h2>
-        <table id="blockedTable">
-            <thead>
-                <tr>
-                    <th>Full Name</th>
-                    <th>College</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="blockedTableBody"></tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>College</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="blockedTableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -117,14 +126,11 @@
     }
 
     function showPage(pageId) {
-        document.getElementById('page-logs').style.display = 'none';
-        document.getElementById('page-stats').style.display = 'none';
-        document.getElementById('page-blocked').style.display = 'none';
+        ['logs', 'stats', 'blocked'].forEach(p => document.getElementById('page-' + p).style.display = 'none');
         document.getElementById('page-' + pageId).style.display = 'block';
-        
-        const titleMap = { 'logs': 'VISIT LOGS', 'stats': 'STATISTICS', 'blocked': 'BLOCKED' };
-        document.getElementById('header-title').innerText = titleMap[pageId];
+        document.getElementById('page-header').innerText = pageId.toUpperCase().replace('-', ' ');
         toggleSidebar();
+        if(pageId === 'stats') initChart();
     }
 
     let fullData = [];
@@ -133,50 +139,60 @@
         try {
             const res = await fetch('/admin-stats');
             fullData = await res.json();
-            updateStats(fullData);
-            renderTables(fullData);
-        } catch (err) { console.error("Error loading data:", err); }
+            updateStats();
+            renderTables();
+        } catch (err) { console.error("Data Load Error:", err); }
     }
 
-    function updateStats(data) {
+    function updateStats() {
         const todayStr = new Date().toDateString();
-        document.getElementById('today-count').innerText = data.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
-        document.getElementById('week-count').innerText = data.length; 
-        document.getElementById('month-count').innerText = data.length;
+        document.getElementById('today-count').innerText = fullData.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
+        document.getElementById('week-count').innerText = fullData.length;
+        document.getElementById('month-count').innerText = fullData.length;
     }
 
-    function renderTables(data) {
-        const tbody = document.getElementById('tableBody');
-        const blockedTbody = document.getElementById('blockedTableBody');
-        tbody.innerHTML = ''; 
-        blockedTbody.innerHTML = '';
+    function renderTables() {
+        const logsBody = document.getElementById('logsTableBody');
+        const blockedBody = document.getElementById('blockedTableBody');
+        logsBody.innerHTML = '';
+        blockedBody.innerHTML = '';
 
-        data.forEach(item => {
-            const v = item.visitors || item;
-            const isBlocked = v?.is_blocked;
-            const isAdmin = v?.is_admin || false;
+        // Tracker to ensure blocked users only appear ONCE in the blocked list
+        const blockedEmails = new Set();
 
-            // Define Action Cell: If Admin, show label. If not, show Block/Unblock button.
-            const actionHtml = isAdmin 
-                ? `<span class="admin-text">ADMIN</span>` 
-                : `<button class="btn ${isBlocked ? 'btn-green' : 'btn-red'}" onclick="toggleBlock('${v?.email}', ${!isBlocked})">
+        fullData.forEach(item => {
+            const v = item.visitors || {};
+            const isBlocked = v.is_blocked || false;
+            const isAdmin = v.is_admin || false;
+
+            // Row for Main Logs
+            const actionBtn = isAdmin ? `<b style="color:#000033">ADMIN</b>` : 
+                `<button class="btn ${isBlocked ? 'btn-unblock' : 'btn-block'}" onclick="toggleBlock('${v.email}', ${!isBlocked})">
                     ${isBlocked ? 'Unblock' : 'Block'}
-                  </button>`;
+                </button>`;
 
-            const row = `
+            logsBody.insertAdjacentHTML('beforeend', `
                 <tr>
-                    <td>${v?.full_name || 'Unknown'}</td>
-                    <td>${v?.program_college || 'N/A'}</td>
-                    <td>${v?.user_type || 'N/A'}</td>
-                    <td><span style="color: ${isBlocked ? 'red' : 'green'}; font-weight:bold;">${isBlocked ? '🚫 BLOCKED' : '✅ ACTIVE'}</span></td>
+                    <td>${v.full_name || 'N/A'}</td>
+                    <td>${v.program_college || 'N/A'}</td>
+                    <td>${v.user_type || 'N/A'}</td>
+                    <td><span class="status-pill" style="color:${isBlocked ? 'red':'green'}">${isBlocked ? '🚫 BLOCKED':'✅ ACTIVE'}</span></td>
                     <td>${item.reason || 'N/A'}</td>
-                    <td>${actionHtml}</td>
-                </tr>`;
+                    <td>${actionBtn}</td>
+                </tr>
+            `);
 
-            if (isBlocked) {
-                blockedTbody.insertAdjacentHTML('beforeend', row);
-            } else {
-                tbody.insertAdjacentHTML('beforeend', row);
+            // Row for Unique Blocked List
+            if (isBlocked && !blockedEmails.has(v.email)) {
+                blockedEmails.add(v.email);
+                blockedBody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td>${v.full_name}</td>
+                        <td>${v.program_college}</td>
+                        <td>${v.email}</td>
+                        <td><button class="btn btn-unblock" onclick="toggleBlock('${v.email}', false)">Unblock User</button></td>
+                    </tr>
+                `);
             }
         });
     }
@@ -186,21 +202,36 @@
         const res = await fetch('/toggle-block', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, blockStatus: newStatus })
+            body: JSON.stringify({ email, blockStatus: newStatus })
         });
         if (res.ok) loadData();
     }
 
+    function initChart() {
+        const ctx = document.getElementById('visitChart').getContext('2d');
+        if (window.myChart) window.myChart.destroy();
+        window.myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                datasets: [{
+                    label: 'Library Visitors',
+                    data: [12, 19, 3, 5, 2, 3],
+                    backgroundColor: '#000033'
+                }]
+            }
+        });
+    }
+
     function filterTable() {
-        const input = document.getElementById("searchInput").value.toUpperCase();
-        const rows = document.querySelectorAll("#tableBody tr");
-        rows.forEach(row => {
-            row.style.display = row.innerText.toUpperCase().includes(input) ? "" : "none";
+        const val = document.getElementById("searchInput").value.toUpperCase();
+        document.querySelectorAll("#logsTableBody tr").forEach(row => {
+            row.style.display = row.innerText.toUpperCase().includes(val) ? "" : "none";
         });
     }
 
     async function adminLogout() {
-        if (confirm("Log out of system?")) window.location.href = '/';
+        if(confirm("Logout?")) window.location.href = "/";
     }
 
     loadData();
