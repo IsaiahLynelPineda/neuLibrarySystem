@@ -17,6 +17,7 @@ app.post('/check-in', async (req, res) => {
     const adminEmails = [
         'jcesperanza@neu.edu.ph', 
         'isaiahlynel.pineda@neu.edu.ph'
+        'janrey.maranan@neu.edu.ph'
     ]; 
     
     // Check if the current user should be an admin
